@@ -2,10 +2,10 @@
 import node_path from 'path';
 
 export default function babelPluginAntdStyle() {
-  let hasImportAntdStyle = false;
   if (process.env.NODE_ENV === 'production') {
     return {};
   }
+  let aliasCreateStyles = 'createStyles';
   return {
     visitor: {
       ImportDeclaration(path: any) {
@@ -19,7 +19,13 @@ export default function babelPluginAntdStyle() {
             (item: any) => item.imported?.name === 'createStyles'
           )
         ) {
-          hasImportAntdStyle = true;
+          const specifiers = path.node.specifiers.find(
+            (item: any) => item.imported?.name === 'createStyles'
+          );
+          if (!specifiers.local) {
+            return;
+          }
+          aliasCreateStyles = specifiers.local.name;
         }
       },
       CallExpression(path: any, state: any) {
@@ -31,8 +37,10 @@ export default function babelPluginAntdStyle() {
           state.file.opts.filename
         );
 
-        if (!hasImportAntdStyle) return;
-        if (path.node.callee.name !== 'createStyles') return;
+        if (
+          !['createStyles', aliasCreateStyles].includes(path.node.callee.name)
+        )
+          return;
         const __BABEL_FILE_NAME__ = t.objectExpression([
           t.objectProperty(
             t.identifier('__BABEL_FILE_NAME__'),
@@ -52,11 +60,16 @@ export default function babelPluginAntdStyle() {
             )
           ),
         ]);
+
         if (path.node.arguments.length === 1) {
           path.node.arguments.push(__BABEL_FILE_NAME__);
           return;
         }
-        if (path.node.arguments.length === 2) {
+
+        if (
+          path.node.arguments.length === 2 &&
+          path.node.arguments[1].type === 'ObjectExpression'
+        ) {
           const properties = path.node.arguments[1].properties;
           if (
             properties.find(
