@@ -2,6 +2,9 @@
 
 export default function babelPluginAntdStyle() {
   let hasImportAntdStyle = false;
+  if (process.env.NODE_ENV === 'production') {
+    return {};
+  }
   return {
     visitor: {
       ImportDeclaration(path: any) {
