@@ -16,7 +16,7 @@
     "build:deps": "father prebundle",
     "dev": "father dev",
     "prepublishOnly": "father doctor && npm run build",
-    "test": "ts-node ./src/test.ts"
+    "test": "ts-node ./test.ts"
   },
   "dependencies": {
     "@babel/generator": "^7.21.3",
