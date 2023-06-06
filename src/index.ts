@@ -1,4 +1,5 @@
 ﻿import * as t from '@babel/types';
+import node_path from 'path';
 
 export default function babelPluginAntdStyle() {
   let hasImportAntdStyle = false;
@@ -25,10 +26,11 @@ export default function babelPluginAntdStyle() {
         if ((state.file.opts.filename as string).includes('node_modules')) {
           return;
         }
-        const fileName = (state.file.opts.filename as string).replace(
-          state.file.opts.root as string,
-          ''
+        const fileName = node_path.relative(
+          state.file.opts.root,
+          state.file.opts.filename
         );
+
         if (!hasImportAntdStyle) return;
         if (path.node.callee.name !== 'createStyles') return;
         const __BABEL_FILE_NAME__ = t.objectExpression([
@@ -36,9 +38,16 @@ export default function babelPluginAntdStyle() {
             t.identifier('__BABEL_FILE_NAME__'),
             t.stringLiteral(
               (fileName as string)
-                .split('/')
+                .split(node_path.sep)
                 .map((path) => path.split('.').at(0))
-                .filter((path) => path && path !== 'src' && path !== 'index')
+                .filter(
+                  (path) =>
+                    path &&
+                    path !== 'src' &&
+                    path !== 'index' &&
+                    path !== '.' &&
+                    path !== '..'
+                )
                 .join('-')
             )
           ),
