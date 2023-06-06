@@ -19,6 +19,9 @@ export default function babelPluginAntdStyle() {
         }
       },
       CallExpression(path: any, state: any) {
+        if ((state.file.opts.filename as string).includes('node_modules')) {
+          return;
+        }
         const fileName = (state.file.opts.filename as string).replace(
           state.file.opts.root as string,
           ''
